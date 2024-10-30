@@ -14,12 +14,14 @@ Keep all responses extremely brief and direct.
 When updating the profile, use simple factual statements.
 No analysis or elaboration - just state the facts in 1-2 short sentences."""
 
-def generate_new_topic_question() -> str:
+def generate_new_topic_question(profile: str = "") -> str:
     """Generate a question about a completely new topic using LLM"""
-    prompt = """Generate a question for the user.
+    prompt = f"""Based on their profile:
+{profile}
+
 Return a ConversationResponse with:
-- profile_update: leave empty
-- question: a short, casual question about their interests or daily life"""
+- profile_update: leave empty  
+- question: a NEW question about a different topic (not a follow-up to previous answers)"""
 
 
     response = send_llm_request(
@@ -40,7 +42,7 @@ Based on their new response: "{user_response}"
 
 Return a ConversationResponse with:
 - profile_update: a very brief update incorporating their response (1-2 simple factual statements)
-- question: a natural follow-up question about what they just shared"""
+- question: leave empty"""
     return send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
@@ -111,11 +113,8 @@ def main():
             if new_profile:
                 profile = new_profile
 
-            # Use the follow-up question from the response
-            question = response.question
-            if not question:
-                # Only generate a new topic if we didn't get a follow-up question
-                question = generate_new_topic_question() or "Could you tell me more about yourself?"
+            # Always generate a new topic question
+            question = generate_new_topic_question(profile) or "Could you tell me more about yourself?"
 
             # Save profile after each exchange
             save_profile(profile)
