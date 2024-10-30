@@ -4,23 +4,14 @@ selfaware AI that can ask questions and build an identity about a person
 
 from llm_wrapper import send_llm_request
 from models import ConversationResponse, Summary
-from prompts import SYSTEM_PROMPT
+from prompts import SYSTEM_PROMPT, NEW_TOPIC_PROMPT, NEW_TOPIC_WITH_PROFILE_PROMPT, PROCESS_RESPONSE_PROMPT, SUMMARY_SYSTEM_PROMPT, SUMMARY_PROMPT, INITIAL_QUESTION_PROMPT
 
 
 def generate_new_topic_question(profile: str = "") -> str:
     """Generate a question about a completely new topic using LLM"""
-    prompt = """
-Lets ask a question about a completely new topic
-"""
+    prompt = PROMPTS.NEW_TOPIC_PROMPT
     if profile:
-        prompt += f"""
-Here is what we know about the person:
-{profile}
-
-Lets ask something else to him, but don't ask about topics already known from their profile!
-
-Never follow up on previouse questions.
-"""
+        prompt += PROMPTS.NEW_TOPIC_WITH_PROFILE_PROMPT.format(profile=profile)
 
     response = send_llm_request(
         model="gpt-4o-mini",
@@ -34,13 +25,10 @@ Never follow up on previouse questions.
 
 def process_response(user_response: str, current_profile: str) -> ConversationResponse:
     """Process user response through LLM to update profile"""
-    prompt = f"""Here is what we know about the person:
-{current_profile}
-
-Based on their new response: "{user_response}"
-
-Never follow up on previouse questions.
-"""
+    prompt = PROMPTS.PROCESS_RESPONSE_PROMPT.format(
+        current_profile=current_profile,
+        user_response=user_response
+    )
     return send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
@@ -78,16 +66,12 @@ def generate_summary(profile: str) -> str:
     if not profile:
         return ""
 
-    prompt = f"""Create a one-sentence summary of this person's profile. Include the most important details.
-Current profile:
-{profile}
-
-IMPORTANT: Your response must be EXACTLY ONE sentence that captures the key information."""
+    prompt = PROMPTS.SUMMARY_PROMPT.format(profile=profile)
 
     try:
         response = send_llm_request(
             model="gpt-4o-mini",
-            system_prompt="You are a summarization assistant. Your only job is to create clear, concise one-sentence summaries.",
+            system_prompt=PROMPTS.SUMMARY_SYSTEM_PROMPT,
             prompt=prompt,
             response_model=Summary,
             images=[],
@@ -117,12 +101,7 @@ def generate_initial_question(profile: str) -> str:
     if not profile:
         return "Hi! Tell me something about yourself?"
 
-    prompt = f"""Based on this profile:
-{profile}
-
-Return a ConversationResponse with:
-- profile_update: leave empty
-- question: an open-ended question to learn something new about the person (avoid asking about topics already known from their profile)"""
+    prompt = PROMPTS.INITIAL_QUESTION_PROMPT.format(profile=profile)
 
     try:
         response = send_llm_request(
