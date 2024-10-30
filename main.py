@@ -7,7 +7,7 @@ from llm_wrapper import send_llm_request
 class ConversationResponse(BaseModel):
     """LLM response containing profile updates and questions"""
     profile_update: str
-    question: str = ""  # For generating questions
+    question: str
 
 SYSTEM_PROMPT = """You are a friendly AI assistant having casual conversations to learn about people.
 Keep all responses extremely brief and direct.
