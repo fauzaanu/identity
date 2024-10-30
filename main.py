@@ -158,6 +158,9 @@ if __name__ == "__main__":
         if summary:
             profile = summary
             print("DEBUG: Profile replaced with summary")
+            # Immediately save the summarized profile
+            save_profile(profile)
+            print("DEBUG: Saved summarized profile to file")
         else:
             print("DEBUG: Summary generation failed")
 
