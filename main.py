@@ -47,7 +47,7 @@ Extract relevant facts, generate an engaging follow-up question, and explain you
 def save_conversation(filename: str, facts: List[PersonalFact], conversation: str) -> None:
     """Save the conversation and facts to a file"""
     with open(filename, 'a') as f:
-        f.write(f"\n=== Conversation at {datetime.now()} ===\n")
+        f.write("\n=== New Conversation ===\n")
         f.write(conversation + "\n")
         f.write("\n=== Learned Facts ===\n")
         for fact in facts:
@@ -68,15 +68,13 @@ def load_conversation(filename: str) -> tuple[List[PersonalFact], str]:
                 lines = fact_block.strip().split('\n')
                 fact_dict = {}
                 for line in lines:
-                    if line.startswith(("Topic:", "Fact:", "Confidence:", "Learned at:")):
+                    if line.startswith(("Topic:", "Fact:")):
                         key, value = line.split(": ", 1)
                         fact_dict[key.lower()] = value
-                if len(fact_dict) == 4:
+                if len(fact_dict) == 2:  # Only topic and fact
                     facts.append(PersonalFact(
                         topic=fact_dict['topic'],
-                        fact=fact_dict['fact'],
-                        confidence=float(fact_dict['confidence']),
-                        learned_at=datetime.fromisoformat(fact_dict['learned at'])
+                        fact=fact_dict['fact']
                     ))
         return facts, content
     except FileNotFoundError:
