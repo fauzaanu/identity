@@ -16,7 +16,7 @@ No analysis or elaboration - just state the facts in 1-2 short sentences."""
 
 def generate_new_topic_question(profile: str = "") -> str:
     """Generate a question about a completely new topic using LLM"""
-    prompt = f"""Return a ConversationResponse with:
+    prompt = """Return a ConversationResponse with:
 - profile_update: leave empty  
 - question: an open-ended question to learn something new about the person"""
 
