@@ -9,9 +9,9 @@ from prompts import SYSTEM_PROMPT
 
 def generate_new_topic_question(profile: str = "") -> str:
     """Generate a question about a completely new topic using LLM"""
-    prompt = PROMPTS.NEW_TOPIC_PROMPT
+    prompt = prompts.NEW_TOPIC_PROMPT
     if profile:
-        prompt += PROMPTS.NEW_TOPIC_WITH_PROFILE_PROMPT.format(profile=profile)
+        prompt += prompts.NEW_TOPIC_WITH_PROFILE_PROMPT.format(profile=profile)
 
     response = send_llm_request(
         model="gpt-4o-mini",
@@ -25,7 +25,7 @@ def generate_new_topic_question(profile: str = "") -> str:
 
 def process_response(user_response: str, current_profile: str) -> ConversationResponse:
     """Process user response through LLM to update profile"""
-    prompt = PROMPTS.PROCESS_RESPONSE_PROMPT.format(
+    prompt = prompts.PROCESS_RESPONSE_PROMPT.format(
         current_profile=current_profile,
         user_response=user_response
     )
@@ -66,12 +66,12 @@ def generate_summary(profile: str) -> str:
     if not profile:
         return ""
 
-    prompt = PROMPTS.SUMMARY_PROMPT.format(profile=profile)
+    prompt = prompts.SUMMARY_PROMPT.format(profile=profile)
 
     try:
         response = send_llm_request(
             model="gpt-4o-mini",
-            system_prompt=PROMPTS.SUMMARY_SYSTEM_PROMPT,
+            system_prompt=prompts.SUMMARY_SYSTEM_PROMPT,
             prompt=prompt,
             response_model=Summary,
             images=[],
@@ -101,7 +101,7 @@ def generate_initial_question(profile: str) -> str:
     if not profile:
         return "Hi! Tell me something about yourself?"
 
-    prompt = PROMPTS.INITIAL_QUESTION_PROMPT.format(profile=profile)
+    prompt = prompts.INITIAL_QUESTION_PROMPT.format(profile=profile)
 
     try:
         response = send_llm_request(
