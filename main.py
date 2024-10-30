@@ -13,6 +13,10 @@ class ConversationResponse(BaseModel):
     question: str
 
 
+class Summary(BaseModel):
+    summary: str
+
+
 SYSTEM_PROMPT = """You are a friendly AI assistant having casual conversation. Never follow up on previouse questions."""
 
 
@@ -73,19 +77,20 @@ def load_profile(filename: str = "profile.txt") -> str:
     except FileNotFoundError:
         return ""
 
+
 def generate_summary(profile: str) -> str:
     """Generate a one-sentence summary of everything we know"""
     if not profile:
         return ""
-        
+
     prompt = f"""Based on this profile, provide a one-sentence summary of everything we know about the person:
 {profile}"""
-    
+
     response = send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
         prompt=prompt,
-        response_model=str,
+        response_model=Summary,
         images=[],
     )
     return response.strip()
@@ -147,7 +152,7 @@ if __name__ == "__main__":
 
         # Increment exchange counter
         exchange_count += 1
-        
+
         # Generate summary every 5 exchanges
         if exchange_count % 5 == 0:
             summary = generate_summary(profile)
@@ -155,6 +160,6 @@ if __name__ == "__main__":
                 print("\nHere's what I know about you so far:")
                 print(summary)
                 print()
-        
+
         # Save profile after each exchange
         save_profile(profile)
