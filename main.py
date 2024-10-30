@@ -1,16 +1,8 @@
 """
 selfaware AI that can ask questions and build an identity about a person
 """
-import json
-from datetime import datetime
 from pydantic import BaseModel
-
 from llm_wrapper import send_llm_request
-
-class Profile(BaseModel):
-    """Stores a narrative description of the person"""
-    narrative: str
-    last_updated: datetime
 
 class ConversationResponse(BaseModel):
     """LLM response containing profile updates"""
@@ -36,10 +28,10 @@ Keep it light and easy to answer in a sentence or two."""
     )
     return response.profile_update.strip()
 
-def process_response(user_response: str, current_profile: Profile) -> ConversationResponse:
+def process_response(user_response: str, current_profile: str) -> ConversationResponse:
     """Process user response through LLM to update profile"""
     prompt = f"""Current profile of the person:
-{current_profile.narrative}
+{current_profile}
 
 Based on their new response: "{user_response}"
 
@@ -52,30 +44,26 @@ Update and expand the profile narrative to incorporate any new insights about th
         images=[],
     )
 
-def save_profile(profile: Profile, filename: str = "profile.json") -> None:
-    """Save the user profile to a JSON file"""
+def save_profile(narrative: str, filename: str = "profile.txt") -> None:
+    """Save the user profile narrative to a text file"""
     with open(filename, 'w') as f:
-        json.dump(profile.model_dump(), f, default=str, indent=2)
+        f.write(narrative)
 
-def load_profile(filename: str = "profile.json") -> Profile:
-    """Load the user profile from a JSON file"""
+def load_profile(filename: str = "profile.txt") -> str:
+    """Load the user profile narrative from a text file"""
     try:
         with open(filename, 'r') as f:
-            data = json.load(f)
-            return Profile(**data)
+            return f.read().strip()
     except FileNotFoundError:
-        return Profile(
-            narrative="",
-            last_updated=datetime.now()
-        )
+        return ""
 
-def generate_initial_question(profile: Profile) -> str:
+def generate_initial_question(profile: str) -> str:
     """Generate a contextual opening question based on existing profile"""
-    if not profile.narrative:
+    if not profile:
         return "Hi! What do you like to do for fun?"
 
     prompt = f"""Based on what I know about the person:
-{profile.narrative}
+{profile}
 
 Generate a single engaging opening question that shows awareness of their profile while seeking new information.
 Make it natural and conversational."""
@@ -113,8 +101,7 @@ def main():
             response = process_response(user_input, profile)
 
             # Update profile with new insights
-            profile.narrative = response.profile_update
-            profile.last_updated = datetime.now()
+            profile = response.profile_update
 
             # Generate a completely new topic question
             question = generate_new_topic_question()
