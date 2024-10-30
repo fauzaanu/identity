@@ -124,13 +124,13 @@ Return a ConversationResponse with:
 if __name__ == "__main__":
     """Run the self-aware AI conversation loop"""
     profile = load_profile()
-    
+
     # Replace with summary on load if profile is substantial
-    if profile and len(profile.splitlines()) >= 17:
+    if profile and len(profile.splitlines()) >= 5:
         summary = generate_summary(profile)
         if summary:
             profile = summary
-    
+
     question = generate_initial_question(profile)
     exchange_count = 0
 
