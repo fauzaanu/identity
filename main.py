@@ -2,7 +2,6 @@
 selfaware AI that can ask questions and build an identity about a person
 """
 import json
-from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
 
