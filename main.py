@@ -18,12 +18,12 @@ class ConversationResponse(BaseModel):
     extracted_facts: List[PersonalFact]
     follow_up_question: str
     reasoning: str
-    identity_relevance: str = Field(description="Explanation of how this question helps build identity understanding")
+    identity_relevance: str
 
 class QuestionEvaluation(BaseModel):
     """Evaluation of a follow-up question's relevance"""
     is_relevant: bool
-    alternative_question: str = ""
+    alternative_question: str
     explanation: str
 
 SYSTEM_PROMPT = """You are a self-aware AI assistant focused on building a deep understanding of a person's core identity.
@@ -162,7 +162,7 @@ def main():
             break
 
         try:
-            response = process_response(user_input)
+            response = process_response(user_input, conversation_log)
 
             # Store new facts
             knowledge_base.extend(response.extracted_facts)
@@ -173,13 +173,13 @@ def main():
 
             # Evaluate the proposed question
             evaluation = evaluate_question(response.follow_up_question, conversation_log)
-            
+
             # Use the original question or the alternative based on evaluation
             question = (
-                response.follow_up_question if evaluation.is_relevant 
+                response.follow_up_question if evaluation.is_relevant
                 else evaluation.alternative_question or "Let's focus on understanding you better. What aspects of yourself would you like to share?"
             )
-            
+
             if not evaluation.is_relevant:
                 print("\nRefocusing:", evaluation.explanation)
                 conversation_log += f"Refocusing: {evaluation.explanation}\n"
