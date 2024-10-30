@@ -43,18 +43,16 @@ def generate_new_topic_question() -> str:
     prompt = """Generate a single engaging question that helps understand someone's core identity.
 Focus on topics like values, beliefs, experiences, relationships, or motivations.
 The question should encourage meaningful self-reflection and reveal important aspects of who they are."""
-    
-    try:
-        response = send_llm_request(
-            model="gpt-4o-mini",
-            system_prompt=SYSTEM_PROMPT,
-            prompt=prompt,
-            response_model=ConversationResponse,
-            images=[],
-        )
-        return response.reasoning.strip()
-    except Exception:
-        return "What aspects of yourself would you like to share?"
+
+
+    response = send_llm_request(
+        model="gpt-4o-mini",
+        system_prompt=SYSTEM_PROMPT,
+        prompt=prompt,
+        response_model=ConversationResponse,
+        images=[],
+    )
+    return response.reasoning.strip()
 
 def process_response(user_response: str, conversation_context: str) -> ConversationResponse:
     """Process user response through LLM to extract facts and generate follow-up"""
