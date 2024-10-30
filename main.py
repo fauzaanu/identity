@@ -65,8 +65,14 @@ Never follow up on previouse questions.
 
 def save_profile(narrative: str, filename: str = "profile.txt") -> None:
     """Save the user profile narrative to a text file"""
-    # Always save the current state, overwriting previous content
-    print(f"DEBUG: Saving profile:\n{narrative}")
+    # Generate and save summary if narrative is long enough
+    if len(narrative.splitlines()) > 5:
+        print("DEBUG: Profile too long, generating summary before saving...")
+        narrative = generate_summary(narrative)
+        print(f"DEBUG: Saving summarized profile:\n{narrative}")
+    else:
+        print(f"DEBUG: Saving profile:\n{narrative}")
+    
     with open(filename, "w") as f:
         f.write(narrative)
 
@@ -193,15 +199,5 @@ if __name__ == "__main__":
         # Increment exchange counter
         exchange_count += 1
 
-        # Always try to summarize after each exchange if profile is long enough
-        if len(profile.splitlines()) > 5:
-            print(f"DEBUG: Profile length ({len(profile.splitlines())}) exceeds 5 lines, generating summary...")
-            summary = generate_summary(profile)
-            old_profile = profile
-            profile = summary
-            print(f"DEBUG: Profile updated from:\n{old_profile}\nto:\n{profile}")
-            # Immediately save the summarized profile
-            save_profile(profile)
-        else:
-            # Save the regular profile update
-            save_profile(profile)
+        # Save profile after each exchange (it will be summarized if needed)
+        save_profile(profile)
