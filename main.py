@@ -148,7 +148,6 @@ def main():
 
         except Exception as e:
             print(f"\nOops, I had trouble processing that: {e}")
-            conversation_log += f"Error: {str(e)}\n"
             question = "Could you rephrase that?"
 
 if __name__ == "__main__":
