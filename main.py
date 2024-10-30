@@ -1,12 +1,12 @@
 """
-selfaware AI that can ask questions and build an identity about a person
+Identity Building through questions
 """
 
 import logging
 
+import prompts
 from llm_wrapper import send_llm_request
 from models import ConversationResponse, Summary
-import prompts
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -63,7 +63,7 @@ def save_profile(narrative: str, filename: str = "profile.txt") -> None:
 def load_profile(filename: str = "profile.txt") -> str:
     """Load the user profile narrative from a text file"""
     try:
-        with open(filename, "r") as f:
+        with open(filename) as f:
             return f.read().strip()
     except FileNotFoundError:
         return ""
@@ -111,22 +111,19 @@ def generate_initial_question(profile: str) -> str:
 
     prompt = prompts.INITIAL_QUESTION_PROMPT.format(profile=profile)
 
-    try:
-        response = send_llm_request(
-            model="gpt-4o-mini",
-            system_prompt=prompts.SYSTEM_PROMPT,
-            prompt=prompt,
-            response_model=ConversationResponse,
-            images=[],
-        )
-        return response.question
-    except Exception:
-        return "How's your day going?"
+    response = send_llm_request(
+        model="gpt-4o-mini",
+        system_prompt=prompts.SYSTEM_PROMPT,
+        prompt=prompt,
+        response_model=ConversationResponse,
+        images=[],
+    )
+    return response.question
 
 
 if __name__ == "__main__":
     profile = load_profile()
-    # Force summarization on load if there's any content
+
     if profile:
         logger.debug("Attempting to generate summary...")
         summary = generate_summary(profile)
@@ -158,16 +155,8 @@ if __name__ == "__main__":
         # Append new insights to profile if we got a valid update
         new_profile = response.new_information.strip()
         if new_profile:
-            if profile:
-                profile = f"{profile}\n{new_profile}"
-            else:
-                profile = new_profile
+            profile = f'{profile}\n{new_profile}' if profile else new_profile
 
-        # Always generate a new topic question
         question = generate_new_topic_question(profile)
-
-        # Increment exchange counter
         exchange_count += 1
-
-        # Save profile after each exchange (it will be summarized if needed)
         save_profile(profile)

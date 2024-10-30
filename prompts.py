@@ -21,9 +21,12 @@ Based on their new response: "{user_response}"
 Never follow up on previouse questions.
 """
 
-SUMMARY_SYSTEM_PROMPT = """You are a summarization assistant. Your only job is to create clear, concise one-sentence summaries."""
+SUMMARY_SYSTEM_PROMPT = """You are a summarization assistant"""
 
-SUMMARY_PROMPT = """Create a one-sentence summary of this person's profile. Include the most important details.
+SUMMARY_PROMPT = """Create a concise summary of this person's profile without losing "ANYTHING" from the original profile.
+Make it shorter but do not omit any information.
+
+
 Current profile:
 {profile}
 
