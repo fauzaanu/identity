@@ -15,7 +15,7 @@ def generate_new_topic_question(profile: str = "") -> str:
 
     response = send_llm_request(
         model="gpt-4o-mini",
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=prompts.SYSTEM_PROMPT,
         prompt=prompt,
         response_model=ConversationResponse,
         images=[],
@@ -31,7 +31,7 @@ def process_response(user_response: str, current_profile: str) -> ConversationRe
     )
     return send_llm_request(
         model="gpt-4o-mini",
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=prompts.SYSTEM_PROMPT,
         prompt=prompt,
         response_model=ConversationResponse,
         images=[],
@@ -106,7 +106,7 @@ def generate_initial_question(profile: str) -> str:
     try:
         response = send_llm_request(
             model="gpt-4o-mini",
-            system_prompt=SYSTEM_PROMPT,
+            system_prompt=prompts.SYSTEM_PROMPT,
             prompt=prompt,
             response_model=ConversationResponse,
             images=[],
