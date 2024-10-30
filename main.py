@@ -111,10 +111,11 @@ def main():
             if new_profile:
                 profile = new_profile
 
-            # Generate a new topic question
-            question = generate_new_topic_question()
+            # Use the follow-up question from the response
+            question = response.question
             if not question:
-                question = "Could you tell me more about yourself?"
+                # Only generate a new topic if we didn't get a follow-up question
+                question = generate_new_topic_question() or "Could you tell me more about yourself?"
 
             # Save profile after each exchange
             save_profile(profile)
