@@ -5,8 +5,9 @@ from pydantic import BaseModel
 from llm_wrapper import send_llm_request
 
 class ConversationResponse(BaseModel):
-    """LLM response containing profile updates"""
+    """LLM response containing profile updates and questions"""
     profile_update: str
+    question: str = ""  # For generating questions
 
 SYSTEM_PROMPT = """You are a friendly AI assistant having casual conversations to learn about people.
 Keep all responses extremely brief and direct.
@@ -26,7 +27,7 @@ Keep it light and easy to answer in a sentence or two."""
         response_model=ConversationResponse,
         images=[],
     )
-    return response.profile_update.strip()
+    return response.question.strip()
 
 def process_response(user_response: str, current_profile: str) -> ConversationResponse:
     """Process user response through LLM to update profile"""
@@ -77,7 +78,7 @@ Make it natural and conversational."""
             response_model=ConversationResponse,
             images=[],
         )
-        return response.follow_up_question
+        return response.question
     except Exception:
         return "How's your day going?"
 
@@ -102,10 +103,14 @@ def main():
             response = process_response(user_input, profile)
 
             # Update profile with new insights
-            profile = response.profile_update
+            profile = response.profile_update.strip()
+            if not profile:
+                profile = "The person is tired and about to go to sleep."
 
             # Generate a completely new topic question
             question = generate_new_topic_question()
+            if not question:
+                question = "What time do you usually go to bed?"
 
             # Save profile after each exchange
             save_profile(profile)
