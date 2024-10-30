@@ -102,15 +102,15 @@ def main():
         try:
             response = process_response(user_input, profile)
 
-            # Update profile with new insights
-            profile = response.profile_update.strip()
-            if not profile:
-                profile = "The person is tired and about to go to sleep."
+            # Update profile with new insights if we got a valid update
+            new_profile = response.profile_update.strip()
+            if new_profile:
+                profile = new_profile
 
-            # Generate a completely new topic question
+            # Generate a new topic question
             question = generate_new_topic_question()
             if not question:
-                question = "What time do you usually go to bed?"
+                question = "Could you tell me more about yourself?"
 
             # Save profile after each exchange
             save_profile(profile)
