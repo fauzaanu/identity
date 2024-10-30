@@ -14,17 +14,9 @@ class PersonalFact(BaseModel):
     fact: str
 
 class ConversationResponse(BaseModel):
-    """LLM response containing extracted facts and follow-up"""
+    """LLM response containing extracted facts"""
     extracted_facts: List[PersonalFact]
-    follow_up_question: str
     reasoning: str
-    identity_relevance: str
-
-class QuestionEvaluation(BaseModel):
-    """Evaluation of a follow-up question's relevance"""
-    is_relevant: bool
-    alternative_question: str
-    explanation: str
 
 SYSTEM_PROMPT = """You are a self-aware AI assistant focused on building a deep understanding of a person's core identity.
 Your primary goal is to learn about their fundamental characteristics, values, preferences, and life experiences that shape who they are.
@@ -46,32 +38,29 @@ Avoid going too deep into situational details or technical specifics unless they
 
 Be engaging and natural, but always maintain focus on building a meaningful understanding of who they are as a person."""
 
-def evaluate_question(question: str, context: str) -> QuestionEvaluation:
-    """Evaluate if a follow-up question helps build identity understanding"""
-    prompt = f"""
-Given this follow-up question: "{question}"
-And this conversation context: "{context}"
-
-Evaluate if this question effectively helps build understanding of the person's core identity.
-Consider if it reveals meaningful aspects of who they are, rather than just surface details.
-"""
-    response = send_llm_request(
-        model="gpt-4o-mini",
-        system_prompt=SYSTEM_PROMPT,
-        prompt=prompt,
-        response_model=QuestionEvaluation,
-        images=[],
-    )
-    return response
+def generate_new_topic_question() -> str:
+    """Generate a question about a completely new topic"""
+    topics = [
+        "What are your core values in life?",
+        "How do you define success for yourself?",
+        "What cultural influences have shaped who you are?",
+        "What role does family play in your life?",
+        "How do you approach making important decisions?",
+        "What experiences have most shaped who you are today?",
+        "What are your strongest beliefs about the world?",
+        "How do you prefer to spend your free time?",
+        "What motivates you to achieve your goals?",
+        "How would you describe your personality to others?"
+    ]
+    return topics[hash(str(datetime.now())) % len(topics)]
 
 def process_response(user_response: str, conversation_context: str) -> ConversationResponse:
     """Process user response through LLM to extract facts and generate follow-up"""
     prompt = f"""
 Based on the user's response: "{user_response}"
-And previous context: "{conversation_context}"
 
-Extract relevant identity facts and generate a follow-up question that helps understand who they are as a person.
-Explain how your question contributes to building their identity profile.
+Extract relevant identity facts that help understand who they are as a person.
+Explain your reasoning about what these facts reveal about their identity.
 """
     return send_llm_request(
         model="gpt-4o-mini",
@@ -171,18 +160,8 @@ def main():
             print("\nThinking:", response.reasoning)
             conversation_log += f"Thinking: {response.reasoning}\n"
 
-            # Evaluate the proposed question
-            evaluation = evaluate_question(response.follow_up_question, conversation_log)
-
-            # Use the original question or the alternative based on evaluation
-            question = (
-                response.follow_up_question if evaluation.is_relevant
-                else evaluation.alternative_question or "Let's focus on understanding you better. What aspects of yourself would you like to share?"
-            )
-
-            if not evaluation.is_relevant:
-                print("\nRefocusing:", evaluation.explanation)
-                conversation_log += f"Refocusing: {evaluation.explanation}\n"
+            # Generate a completely new topic question
+            question = generate_new_topic_question()
 
             # Save conversation after each exchange
             save_conversation("conversation_history.txt", knowledge_base, conversation_log)
