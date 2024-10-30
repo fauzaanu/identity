@@ -79,20 +79,16 @@ def generate_summary(profile: str) -> str:
         return ""
         
     prompt = f"""Based on this profile, provide a one-sentence summary of everything we know about the person:
-{profile}
-
-Return a ConversationResponse with:
-- new_information: the one-sentence summary
-- question: leave empty"""
+{profile}"""
     
     response = send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
         prompt=prompt,
-        response_model=ConversationResponse,
+        response_model=str,
         images=[],
     )
-    return response.new_information.strip()
+    return response.strip()
 
 
 def generate_initial_question(profile: str) -> str:
