@@ -4,7 +4,7 @@ selfaware AI that can ask questions and build an identity about a person
 
 from llm_wrapper import send_llm_request
 from models import ConversationResponse, Summary
-from prompts import SYSTEM_PROMPT
+import prompts
 
 
 def generate_new_topic_question(profile: str = "") -> str:
