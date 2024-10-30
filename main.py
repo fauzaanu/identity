@@ -9,9 +9,9 @@ class ConversationResponse(BaseModel):
     profile_update: str
 
 SYSTEM_PROMPT = """You are a friendly AI assistant having casual conversations to learn about people.
-Keep questions light, short, and easy to answer.
-Focus on everyday topics like hobbies, interests, and preferences.
-Avoid heavy or personal topics unless the person brings them up first."""
+Keep all responses extremely brief and direct.
+When updating the profile, use simple factual statements.
+No analysis or elaboration - just state the facts in 1-2 short sentences."""
 
 def generate_new_topic_question() -> str:
     """Generate a question about a completely new topic using LLM"""
@@ -35,7 +35,8 @@ def process_response(user_response: str, current_profile: str) -> ConversationRe
 
 Based on their new response: "{user_response}"
 
-Update and expand the profile narrative to incorporate any new insights about their identity."""
+Write a very brief profile update incorporating their response.
+Keep it to 1-2 simple factual statements without analysis."""
     return send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
