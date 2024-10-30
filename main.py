@@ -126,7 +126,7 @@ if __name__ == "__main__":
     profile = load_profile()
 
     # Replace with summary on load if profile is substantial
-    if profile and len(profile.splitlines()) >= 5:
+    if profile and len(profile.splitlines()) > 5:
         summary = generate_summary(profile)
         if summary:
             profile = summary
@@ -160,8 +160,8 @@ if __name__ == "__main__":
         # Increment exchange counter
         exchange_count += 1
 
-        # Replace profile with summary every 5 exchanges
-        if exchange_count % 5 == 0:
+        # Replace profile with summary when it gets too long
+        if len(profile.splitlines()) > 5:
             summary = generate_summary(profile)
             if summary:
                 profile = summary
