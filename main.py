@@ -59,10 +59,7 @@ def process_response(user_response: str, current_profile: Profile) -> Conversati
 
 Based on their new response: "{user_response}"
 
-Update and expand the profile narrative to incorporate any new insights about their identity.
-Explain your reasoning about what their response reveals about them.
-
-Return an updated complete profile paragraph."""
+Update and expand the profile narrative to incorporate any new insights about their identity."""
     return send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
