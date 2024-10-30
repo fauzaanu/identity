@@ -2,9 +2,17 @@
 selfaware AI that can ask questions and build an identity about a person
 """
 
+import logging
+
 from llm_wrapper import send_llm_request
 from models import ConversationResponse, Summary
 import prompts
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 def generate_new_topic_question(profile: str = "") -> str:
@@ -42,11 +50,11 @@ def save_profile(narrative: str, filename: str = "profile.txt") -> None:
     """Save the user profile narrative to a text file"""
     # Generate and save summary if narrative is long enough
     if len(narrative.splitlines()) > 5:
-        print("DEBUG: Profile too long, generating summary before saving...")
+        logger.debug("Profile too long, generating summary before saving...")
         narrative = generate_summary(narrative)
-        print(f"DEBUG: Saving summarized profile:\n{narrative}")
+        logger.debug(f"Saving summarized profile:\n{narrative}")
     else:
-        print(f"DEBUG: Saving profile:\n{narrative}")
+        logger.debug(f"Saving profile:\n{narrative}")
 
     with open(filename, "w") as f:
         f.write(narrative)
@@ -78,21 +86,21 @@ def generate_summary(profile: str) -> str:
         )
 
         if not response or not response.summary:
-            print("DEBUG: No summary returned from LLM")
+            logger.debug("No summary returned from LLM")
             return profile
 
         summary = response.summary.strip()
-        print(f"DEBUG: Generated new summary: {summary}")
+        logger.debug(f"Generated new summary: {summary}")
 
         # Validate the summary is actually shorter
         if len(summary.splitlines()) < len(profile.splitlines()):
             return summary
         else:
-            print("DEBUG: Summary was not shorter than profile")
+            logger.debug("Summary was not shorter than profile")
             return profile
 
     except Exception as e:
-        print(f"DEBUG: Summary generation error: {e}")
+        logger.error(f"Summary generation error: {e}")
         return profile
 
 
@@ -120,17 +128,17 @@ if __name__ == "__main__":
     profile = load_profile()
     # Force summarization on load if there's any content
     if profile:
-        print("DEBUG: Attempting to generate summary...")
+        logger.debug("Attempting to generate summary...")
         summary = generate_summary(profile)
-        print(f"DEBUG: Generated summary: {summary}")
+        logger.debug(f"Generated summary: {summary}")
         if summary:
             profile = summary
-            print("DEBUG: Profile replaced with summary")
+            logger.debug("Profile replaced with summary")
             # Immediately save the summarized profile
             save_profile(profile)
-            print("DEBUG: Saved summarized profile to file")
+            logger.debug("Saved summarized profile to file")
         else:
-            print("DEBUG: Summary generation failed")
+            logger.debug("Summary generation failed")
 
     question = generate_initial_question(profile)
     exchange_count = 0
