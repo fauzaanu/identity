@@ -93,7 +93,7 @@ def generate_summary(profile: str) -> str:
         response_model=Summary,
         images=[],
     )
-    return response.strip()
+    return response.summary
 
 
 def generate_initial_question(profile: str) -> str:
