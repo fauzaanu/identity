@@ -73,6 +73,27 @@ def load_profile(filename: str = "profile.txt") -> str:
     except FileNotFoundError:
         return ""
 
+def generate_summary(profile: str) -> str:
+    """Generate a one-sentence summary of everything we know"""
+    if not profile:
+        return ""
+        
+    prompt = f"""Based on this profile, provide a one-sentence summary of everything we know about the person:
+{profile}
+
+Return a ConversationResponse with:
+- new_information: the one-sentence summary
+- question: leave empty"""
+    
+    response = send_llm_request(
+        model="gpt-4o-mini",
+        system_prompt=SYSTEM_PROMPT,
+        prompt=prompt,
+        response_model=ConversationResponse,
+        images=[],
+    )
+    return response.new_information.strip()
+
 
 def generate_initial_question(profile: str) -> str:
     """Generate a contextual opening question based on existing profile"""
@@ -103,6 +124,7 @@ if __name__ == "__main__":
     """Run the self-aware AI conversation loop"""
     profile = load_profile()
     question = generate_initial_question(profile)
+    exchange_count = 0
 
     while True:
         print("\nAI:", question)
@@ -127,5 +149,16 @@ if __name__ == "__main__":
         # Always generate a new topic question
         question = generate_new_topic_question(profile)
 
+        # Increment exchange counter
+        exchange_count += 1
+        
+        # Generate summary every 5 exchanges
+        if exchange_count % 5 == 0:
+            summary = generate_summary(profile)
+            if summary:
+                print("\nHere's what I know about you so far:")
+                print(summary)
+                print()
+        
         # Save profile after each exchange
         save_profile(profile)
