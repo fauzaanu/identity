@@ -51,7 +51,7 @@ The question should encourage meaningful self-reflection and reveal important as
         response_model=ConversationResponse,
         images=[],
     )
-    return response.reasoning.strip()
+    return response.profile_update.strip()
 
 def process_response(user_response: str, current_profile: Profile) -> ConversationResponse:
     """Process user response through LLM to update profile"""
@@ -135,9 +135,6 @@ def main():
             # Update profile with new insights
             profile.narrative = response.profile_update
             profile.last_updated = datetime.now()
-
-            # Show reasoning
-            print("\nThinking:", response.reasoning)
 
             # Generate a completely new topic question
             question = generate_new_topic_question()
