@@ -16,9 +16,12 @@ No analysis or elaboration - just state the facts in 1-2 short sentences."""
 
 def generate_new_topic_question(profile: str = "") -> str:
     """Generate a question about a completely new topic using LLM"""
-    prompt = """Return a ConversationResponse with:
+    prompt = f"""Based on this profile:
+{profile}
+
+Return a ConversationResponse with:
 - profile_update: leave empty  
-- question: an open-ended question to learn something new about the person"""
+- question: an open-ended question to learn something new about the person (avoid asking about topics already known from their profile)"""
 
 
     response = send_llm_request(
@@ -66,9 +69,12 @@ def generate_initial_question(profile: str) -> str:
     if not profile:
         return "Hi! Tell me something about yourself?"
 
-    prompt = """Return a ConversationResponse with:
+    prompt = f"""Based on this profile:
+{profile}
+
+Return a ConversationResponse with:
 - profile_update: leave empty
-- question: an open-ended question to learn something new about the person"""
+- question: an open-ended question to learn something new about the person (avoid asking about topics already known from their profile)"""
 
     try:
         response = send_llm_request(
