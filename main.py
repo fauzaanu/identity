@@ -108,10 +108,13 @@ def main():
         try:
             response = process_response(user_input, profile)
 
-            # Update profile with new insights if we got a valid update
+            # Append new insights to profile if we got a valid update
             new_profile = response.profile_update.strip()
             if new_profile:
-                profile = new_profile
+                if profile:
+                    profile = f"{profile}\n{new_profile}"
+                else:
+                    profile = new_profile
 
             # Always generate a new topic question
             question = generate_new_topic_question(profile) or "Could you tell me more about yourself?"
