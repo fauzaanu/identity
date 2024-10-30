@@ -83,17 +83,23 @@ def generate_summary(profile: str) -> str:
     if not profile:
         return ""
 
-    prompt = f"""Based on this profile, provide a one-sentence summary of everything we know about the person:
-{profile}"""
+    prompt = f"""Summarize everything we know about this person in exactly one sentence. Here's their profile:
+{profile}
 
-    response = send_llm_request(
-        model="gpt-4o-mini",
-        system_prompt=SYSTEM_PROMPT,
-        prompt=prompt,
-        response_model=Summary,
-        images=[],
-    )
-    return response.summary
+Important: Return ONLY the summary sentence, nothing else."""
+
+    try:
+        response = send_llm_request(
+            model="gpt-4o-mini",
+            system_prompt=SYSTEM_PROMPT,
+            prompt=prompt,
+            response_model=Summary,
+            images=[],
+        )
+        return response.summary if response.summary else ""
+    except Exception as e:
+        print(f"DEBUG: Summary generation error: {e}")
+        return ""
 
 
 def generate_initial_question(profile: str) -> str:
@@ -124,14 +130,19 @@ Return a ConversationResponse with:
 if __name__ == "__main__":
     """Run the self-aware AI conversation loop"""
     profile = load_profile()
-    print(f"DEBUG: Initial profile lines: {len(profile.splitlines())}")  # Debug line
+    print(f"DEBUG: Initial profile content:\n{profile}")
+    print(f"DEBUG: Initial profile lines: {len(profile.splitlines())}")
 
-    # Always summarize on load if there's content
+    # Force summarization on load if there's any content
     if profile:
+        print("DEBUG: Attempting to generate summary...")
         summary = generate_summary(profile)
+        print(f"DEBUG: Generated summary: {summary}")
         if summary:
             profile = summary
-            print("DEBUG: Profile summarized on load")  # Debug line
+            print("DEBUG: Profile replaced with summary")
+        else:
+            print("DEBUG: Summary generation failed")
 
     question = generate_initial_question(profile)
     exchange_count = 0
