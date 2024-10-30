@@ -13,7 +13,7 @@ class ConversationResponse(BaseModel):
     question: str
 
 
-SYSTEM_PROMPT = """You are a friendly AI assistant having casual conversation"""
+SYSTEM_PROMPT = """You are a friendly AI assistant having casual conversation. Never follow up on previouse questions."""
 
 
 def generate_new_topic_question(profile: str = "") -> str:
@@ -25,6 +25,10 @@ Lets ask a question about a completely new topic
         prompt += f"""
 Here is what we know about the person:
 {profile}
+
+Lets ask something else to him, but don't ask about topics already known from their profile!
+
+Never follow up on previouse questions.
 """
 
     response = send_llm_request(
@@ -44,9 +48,7 @@ def process_response(user_response: str, current_profile: str) -> ConversationRe
 
 Based on their new response: "{user_response}"
 
-Lets ask something else to him, but don't ask about topics already known from their profile!
-
-Also lets not follow up on topics too much. Digging information like that is highly inappropriate.
+Never follow up on previouse questions.
 """
     return send_llm_request(
         model="gpt-4o-mini",
