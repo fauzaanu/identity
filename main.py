@@ -124,12 +124,14 @@ Return a ConversationResponse with:
 if __name__ == "__main__":
     """Run the self-aware AI conversation loop"""
     profile = load_profile()
+    print(f"DEBUG: Initial profile lines: {len(profile.splitlines())}")  # Debug line
 
-    # Replace with summary on load if profile is substantial
-    if profile and len(profile.splitlines()) > 5:
+    # Always summarize on load if there's content
+    if profile:
         summary = generate_summary(profile)
         if summary:
             profile = summary
+            print("DEBUG: Profile summarized on load")  # Debug line
 
     question = generate_initial_question(profile)
     exchange_count = 0
