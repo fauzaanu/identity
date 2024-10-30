@@ -115,7 +115,7 @@ if __name__ == "__main__":
         response = process_response(user_input, profile)
 
         # Append new insights to profile if we got a valid update
-        new_profile = response.profile_update.strip()
+        new_profile = response.new_information.strip()
         if new_profile:
             if profile:
                 profile = f"{profile}\n{new_profile}"
