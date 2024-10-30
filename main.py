@@ -16,8 +16,10 @@ No analysis or elaboration - just state the facts in 1-2 short sentences."""
 
 def generate_new_topic_question() -> str:
     """Generate a question about a completely new topic using LLM"""
-    prompt = """Ask a short, casual question about their interests or daily life.
-Keep it light and easy to answer in a sentence or two."""
+    prompt = """Generate a question for the user.
+Return a ConversationResponse with:
+- profile_update: leave empty
+- question: a short, casual question about their interests or daily life"""
 
 
     response = send_llm_request(
@@ -36,8 +38,9 @@ def process_response(user_response: str, current_profile: str) -> ConversationRe
 
 Based on their new response: "{user_response}"
 
-Write a very brief profile update incorporating their response.
-Keep it to 1-2 simple factual statements without analysis."""
+Return a ConversationResponse with:
+- profile_update: a very brief update incorporating their response (1-2 simple factual statements)
+- question: a natural follow-up question about what they just shared"""
     return send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
@@ -67,8 +70,9 @@ def generate_initial_question(profile: str) -> str:
     prompt = f"""Based on what I know about the person:
 {profile}
 
-Generate a single engaging opening question that shows awareness of their profile while seeking new information.
-Make it natural and conversational."""
+Return a ConversationResponse with:
+- profile_update: leave empty
+- question: a single engaging question that shows awareness of their profile"""
 
     try:
         response = send_llm_request(
