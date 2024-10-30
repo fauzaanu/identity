@@ -16,12 +16,9 @@ No analysis or elaboration - just state the facts in 1-2 short sentences."""
 
 def generate_new_topic_question(profile: str = "") -> str:
     """Generate a question about a completely new topic using LLM"""
-    prompt = f"""Based on their profile:
-{profile}
-
-Return a ConversationResponse with:
+    prompt = f"""Return a ConversationResponse with:
 - profile_update: leave empty  
-- question: a NEW question about a different topic (not a follow-up to previous answers)"""
+- question: an open-ended question to learn something new about the person"""
 
 
     response = send_llm_request(
@@ -67,14 +64,11 @@ def load_profile(filename: str = "profile.txt") -> str:
 def generate_initial_question(profile: str) -> str:
     """Generate a contextual opening question based on existing profile"""
     if not profile:
-        return "Hi! What do you like to do for fun?"
+        return "Hi! Tell me something about yourself?"
 
-    prompt = f"""Based on what I know about the person:
-{profile}
-
-Return a ConversationResponse with:
+    prompt = """Return a ConversationResponse with:
 - profile_update: leave empty
-- question: a single engaging question that shows awareness of their profile"""
+- question: an open-ended question to learn something new about the person"""
 
     try:
         response = send_llm_request(
