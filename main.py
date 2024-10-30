@@ -39,20 +39,22 @@ Avoid going too deep into situational details or technical specifics unless they
 Be engaging and natural, but always maintain focus on building a meaningful understanding of who they are as a person."""
 
 def generate_new_topic_question() -> str:
-    """Generate a question about a completely new topic"""
-    topics = [
-        "What are your core values in life?",
-        "How do you define success for yourself?",
-        "What cultural influences have shaped who you are?",
-        "What role does family play in your life?",
-        "How do you approach making important decisions?",
-        "What experiences have most shaped who you are today?",
-        "What are your strongest beliefs about the world?",
-        "How do you prefer to spend your free time?",
-        "What motivates you to achieve your goals?",
-        "How would you describe your personality to others?"
-    ]
-    return topics[hash(str(datetime.now())) % len(topics)]
+    """Generate a question about a completely new topic using LLM"""
+    prompt = """Generate a single engaging question that helps understand someone's core identity.
+Focus on topics like values, beliefs, experiences, relationships, or motivations.
+The question should encourage meaningful self-reflection and reveal important aspects of who they are."""
+    
+    try:
+        response = send_llm_request(
+            model="gpt-4o-mini",
+            system_prompt=SYSTEM_PROMPT,
+            prompt=prompt,
+            response_model=ConversationResponse,
+            images=[],
+        )
+        return response.reasoning.strip()
+    except Exception:
+        return "What aspects of yourself would you like to share?"
 
 def process_response(user_response: str, conversation_context: str) -> ConversationResponse:
     """Process user response through LLM to extract facts and generate follow-up"""
