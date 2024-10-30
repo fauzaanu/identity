@@ -117,11 +117,7 @@ def generate_initial_question(profile: str) -> str:
 
 
 if __name__ == "__main__":
-    """Run the self-aware AI conversation loop"""
     profile = load_profile()
-    print(f"DEBUG: Initial profile content:\n{profile}")
-    print(f"DEBUG: Initial profile lines: {len(profile.splitlines())}")
-
     # Force summarization on load if there's any content
     if profile:
         print("DEBUG: Attempting to generate summary...")
