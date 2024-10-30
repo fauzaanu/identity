@@ -23,8 +23,8 @@ Your primary goal is to learn about their fundamental characteristics, values, p
 
 When processing responses:
 1. Extract meaningful personal facts that contribute to understanding their identity
-2. Generate follow-up questions that specifically help build a clearer picture of who they are
-3. Explain how each question contributes to understanding their identity
+2. Analyze what these facts reveal about their core identity
+3. Focus on depth of understanding rather than breadth of topics
 
 Stay focused on identity-building topics such as:
 - Core values and beliefs
