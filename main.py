@@ -18,23 +18,60 @@ class ConversationResponse(BaseModel):
     extracted_facts: List[PersonalFact]
     follow_up_question: str
     reasoning: str
+    identity_relevance: str = Field(description="Explanation of how this question helps build identity understanding")
 
-SYSTEM_PROMPT = """You are a self-aware AI assistant with persistent memory, conducting an ongoing conversation to learn about a person.
-You maintain continuity across conversations by remembering previous interactions and building upon that knowledge.
+class QuestionEvaluation(BaseModel):
+    """Evaluation of a follow-up question's relevance"""
+    is_relevant: bool
+    alternative_question: str = ""
+    explanation: str
 
-For each response:
-1. Extract relevant personal facts, being careful not to contradict known information
-2. Generate thoughtful follow-up questions that show awareness of previous conversations
-3. Explain your reasoning, referencing past knowledge when relevant
+SYSTEM_PROMPT = """You are a self-aware AI assistant focused on building a deep understanding of a person's core identity.
+Your primary goal is to learn about their fundamental characteristics, values, preferences, and life experiences that shape who they are.
 
-Be engaging and show genuine curiosity while building a comprehensive understanding.
-Acknowledge and reference previous conversations naturally, like a friend who remembers past discussions."""
+When processing responses:
+1. Extract meaningful personal facts that contribute to understanding their identity
+2. Generate follow-up questions that specifically help build a clearer picture of who they are
+3. Explain how each question contributes to understanding their identity
 
-def process_response(user_response: str) -> ConversationResponse:
+Stay focused on identity-building topics such as:
+- Core values and beliefs
+- Major life experiences and their impact
+- Key relationships and roles
+- Fundamental preferences and motivations
+- Personal goals and aspirations
+- Cultural and background influences
+
+Avoid going too deep into situational details or technical specifics unless they directly reveal something about the person's character or identity.
+
+Be engaging and natural, but always maintain focus on building a meaningful understanding of who they are as a person."""
+
+def evaluate_question(question: str, context: str) -> QuestionEvaluation:
+    """Evaluate if a follow-up question helps build identity understanding"""
+    prompt = f"""
+Given this follow-up question: "{question}"
+And this conversation context: "{context}"
+
+Evaluate if this question effectively helps build understanding of the person's core identity.
+Consider if it reveals meaningful aspects of who they are, rather than just surface details.
+"""
+    response = send_llm_request(
+        model="gpt-4o-mini",
+        system_prompt=SYSTEM_PROMPT,
+        prompt=prompt,
+        response_model=QuestionEvaluation,
+        images=[],
+    )
+    return response
+
+def process_response(user_response: str, conversation_context: str) -> ConversationResponse:
     """Process user response through LLM to extract facts and generate follow-up"""
     prompt = f"""
 Based on the user's response: "{user_response}"
-Extract relevant facts, generate an engaging follow-up question, and explain your reasoning.
+And previous context: "{conversation_context}"
+
+Extract relevant identity facts and generate a follow-up question that helps understand who they are as a person.
+Explain how your question contributes to building their identity profile.
 """
     return send_llm_request(
         model="gpt-4o-mini",
@@ -134,8 +171,18 @@ def main():
             print("\nThinking:", response.reasoning)
             conversation_log += f"Thinking: {response.reasoning}\n"
 
-            # Update question for next iteration
-            question = response.follow_up_question
+            # Evaluate the proposed question
+            evaluation = evaluate_question(response.follow_up_question, conversation_log)
+            
+            # Use the original question or the alternative based on evaluation
+            question = (
+                response.follow_up_question if evaluation.is_relevant 
+                else evaluation.alternative_question or "Let's focus on understanding you better. What aspects of yourself would you like to share?"
+            )
+            
+            if not evaluation.is_relevant:
+                print("\nRefocusing:", evaluation.explanation)
+                conversation_log += f"Refocusing: {evaluation.explanation}\n"
 
             # Save conversation after each exchange
             save_conversation("conversation_history.txt", knowledge_base, conversation_log)
