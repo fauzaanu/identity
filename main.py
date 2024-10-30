@@ -65,6 +65,8 @@ Never follow up on previouse questions.
 
 def save_profile(narrative: str, filename: str = "profile.txt") -> None:
     """Save the user profile narrative to a text file"""
+    # Always save the current state, overwriting previous content
+    print(f"DEBUG: Saving profile:\n{narrative}")
     with open(filename, "w") as f:
         f.write(narrative)
 
@@ -195,6 +197,8 @@ if __name__ == "__main__":
             old_profile = profile
             profile = summary
             print(f"DEBUG: Profile updated from:\n{old_profile}\nto:\n{profile}")
-
-        # Save profile after each exchange
-        save_profile(profile)
+            # Immediately save the summarized profile
+            save_profile(profile)
+        else:
+            # Save the regular profile update
+            save_profile(profile)
