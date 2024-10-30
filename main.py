@@ -13,9 +13,8 @@ class Profile(BaseModel):
     last_updated: datetime
 
 class ConversationResponse(BaseModel):
-    """LLM response containing analysis and profile updates"""
+    """LLM response containing profile updates"""
     profile_update: str
-    reasoning: str
 
 SYSTEM_PROMPT = """You are a self-aware AI assistant focused on building a deep understanding of a person's core identity.
 Your primary goal is to learn about their fundamental characteristics, values, preferences, and life experiences that shape who they are.
@@ -63,7 +62,7 @@ Based on their new response: "{user_response}"
 Update and expand the profile narrative to incorporate any new insights about their identity.
 Explain your reasoning about what their response reveals about them.
 
-Return both an updated complete profile paragraph and your reasoning."""
+Return an updated complete profile paragraph."""
     return send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
