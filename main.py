@@ -12,8 +12,6 @@ class PersonalFact(BaseModel):
     """A single learned fact about the person"""
     topic: str
     fact: str
-    confidence: float = Field(ge=0.0, le=1.0)
-    learned_at: datetime = Field(default_factory=datetime.now)
 
 class ConversationResponse(BaseModel):
     """LLM response containing extracted facts and follow-up"""
@@ -39,7 +37,7 @@ Based on the user's response: "{user_response}"
 Extract relevant facts, generate an engaging follow-up question, and explain your reasoning.
 """
     return send_llm_request(
-        model="gpt-4-turbo-preview",
+        model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
         prompt=prompt,
         response_model=ConversationResponse,
@@ -55,8 +53,6 @@ def save_conversation(filename: str, facts: List[PersonalFact], conversation: st
         for fact in facts:
             f.write(f"Topic: {fact.topic}\n")
             f.write(f"Fact: {fact.fact}\n")
-            f.write(f"Confidence: {fact.confidence}\n")
-            f.write(f"Learned at: {fact.learned_at}\n")
             f.write("-" * 50 + "\n")
 
 def load_conversation(filename: str) -> tuple[List[PersonalFact], str]:
@@ -64,7 +60,7 @@ def load_conversation(filename: str) -> tuple[List[PersonalFact], str]:
     try:
         with open(filename, 'r') as f:
             content = f.read()
-        
+
         # Parse facts from the content
         facts = []
         for fact_block in content.split("-" * 50):
@@ -90,7 +86,7 @@ def generate_initial_question(facts: List[PersonalFact]) -> str:
     """Generate a contextual opening question based on existing knowledge"""
     if not facts:
         return "I'm excited to learn about you. What would you like to share?"
-    
+
     # Use existing knowledge to form a contextual question
     prompt = f"""Based on these known facts about the person:
 {chr(10).join(f'- {fact.topic}: {fact.fact}' for fact in facts)}
@@ -100,7 +96,7 @@ Make it natural and conversational."""
 
     try:
         response = send_llm_request(
-            model="gpt-4-turbo-preview",
+            model="gpt-4o-mini",
             system_prompt=SYSTEM_PROMPT,
             prompt=prompt,
             response_model=ConversationResponse,
@@ -113,39 +109,39 @@ Make it natural and conversational."""
 def main():
     """Run the self-aware AI conversation loop"""
     knowledge_base, conversation_log = load_conversation("conversation_history.txt")
-    
+
     print("Hello! I'm your AI companion, and I remember our previous conversations.")
     question = generate_initial_question(knowledge_base)
-    
+
     while True:
         print("\nAI:", question)
         conversation_log += f"\nAI: {question}\n"
-        
+
         user_input = input("You: ").strip()
         conversation_log += f"You: {user_input}\n"
-        
+
         if user_input.lower() in ['quit', 'exit', 'bye']:
             print("\nThank you for sharing with me! I've learned a lot about you.")
             # Save final conversation before exiting
             save_conversation("conversation_history.txt", knowledge_base, conversation_log)
             break
-            
+
         try:
             response = process_response(user_input)
-            
+
             # Store new facts
             knowledge_base.extend(response.extracted_facts)
-            
+
             # Show and log reasoning
             print("\nThinking:", response.reasoning)
             conversation_log += f"Thinking: {response.reasoning}\n"
-            
+
             # Update question for next iteration
             question = response.follow_up_question
-            
+
             # Save conversation after each exchange
             save_conversation("conversation_history.txt", knowledge_base, conversation_log)
-            
+
         except Exception as e:
             print(f"\nOops, I had trouble processing that: {e}")
             conversation_log += f"Error: {str(e)}\n"
