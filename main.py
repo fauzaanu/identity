@@ -2,22 +2,9 @@
 selfaware AI that can ask questions and build an identity about a person
 """
 
-from pydantic import BaseModel
 from llm_wrapper import send_llm_request
-
-
-class ConversationResponse(BaseModel):
-    """LLM response containing profile updates and questions"""
-
-    new_information: str
-    question: str
-
-
-class Summary(BaseModel):
-    summary: str
-
-
-SYSTEM_PROMPT = """You are a friendly AI assistant having casual conversation. Never follow up on previouse questions."""
+from models import ConversationResponse, Summary
+from prompts import SYSTEM_PROMPT
 
 
 def generate_new_topic_question(profile: str = "") -> str:
@@ -72,7 +59,7 @@ def save_profile(narrative: str, filename: str = "profile.txt") -> None:
         print(f"DEBUG: Saving summarized profile:\n{narrative}")
     else:
         print(f"DEBUG: Saving profile:\n{narrative}")
-    
+
     with open(filename, "w") as f:
         f.write(narrative)
 
@@ -105,21 +92,21 @@ IMPORTANT: Your response must be EXACTLY ONE sentence that captures the key info
             response_model=Summary,
             images=[],
         )
-        
+
         if not response or not response.summary:
             print("DEBUG: No summary returned from LLM")
             return profile
-            
+
         summary = response.summary.strip()
         print(f"DEBUG: Generated new summary: {summary}")
-        
+
         # Validate the summary is actually shorter
         if len(summary.splitlines()) < len(profile.splitlines()):
             return summary
         else:
             print("DEBUG: Summary was not shorter than profile")
             return profile
-            
+
     except Exception as e:
         print(f"DEBUG: Summary generation error: {e}")
         return profile
