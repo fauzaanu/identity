@@ -83,23 +83,38 @@ def generate_summary(profile: str) -> str:
     if not profile:
         return ""
 
-    prompt = f"""Summarize everything we know about this person in exactly one sentence. Here's their profile:
+    prompt = f"""Create a one-sentence summary of this person's profile. Include the most important details.
+Current profile:
 {profile}
 
-Important: Return ONLY the summary sentence, nothing else."""
+IMPORTANT: Your response must be EXACTLY ONE sentence that captures the key information."""
 
     try:
         response = send_llm_request(
             model="gpt-4o-mini",
-            system_prompt=SYSTEM_PROMPT,
+            system_prompt="You are a summarization assistant. Your only job is to create clear, concise one-sentence summaries.",
             prompt=prompt,
             response_model=Summary,
             images=[],
         )
-        return response.summary if response.summary else ""
+        
+        if not response or not response.summary:
+            print("DEBUG: No summary returned from LLM")
+            return profile
+            
+        summary = response.summary.strip()
+        print(f"DEBUG: Generated new summary: {summary}")
+        
+        # Validate the summary is actually shorter
+        if len(summary.splitlines()) < len(profile.splitlines()):
+            return summary
+        else:
+            print("DEBUG: Summary was not shorter than profile")
+            return profile
+            
     except Exception as e:
         print(f"DEBUG: Summary generation error: {e}")
-        return ""
+        return profile
 
 
 def generate_initial_question(profile: str) -> str:
@@ -173,11 +188,13 @@ if __name__ == "__main__":
         # Increment exchange counter
         exchange_count += 1
 
-        # Replace profile with summary when it gets too long
+        # Always try to summarize after each exchange if profile is long enough
         if len(profile.splitlines()) > 5:
+            print(f"DEBUG: Profile length ({len(profile.splitlines())}) exceeds 5 lines, generating summary...")
             summary = generate_summary(profile)
-            if summary:
-                profile = summary
+            old_profile = profile
+            profile = summary
+            print(f"DEBUG: Profile updated from:\n{old_profile}\nto:\n{profile}")
 
         # Save profile after each exchange
         save_profile(profile)
