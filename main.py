@@ -43,19 +43,38 @@ Extract relevant facts, generate an engaging follow-up question, and explain you
         images=[],
     )
 
+def save_conversation(filename: str, facts: List[PersonalFact], conversation: str):
+    """Save the conversation and facts to a file"""
+    with open(filename, 'a') as f:
+        f.write(f"\n=== Conversation at {datetime.now()} ===\n")
+        f.write(conversation + "\n")
+        f.write("\n=== Learned Facts ===\n")
+        for fact in facts:
+            f.write(f"Topic: {fact.topic}\n")
+            f.write(f"Fact: {fact.fact}\n")
+            f.write(f"Confidence: {fact.confidence}\n")
+            f.write(f"Learned at: {fact.learned_at}\n")
+            f.write("-" * 50 + "\n")
+
 def main():
     """Run the self-aware AI conversation loop"""
     print("Hello! I'm an AI assistant who would love to get to know you better.")
     question = "What brings you here today?"
     
     knowledge_base = []
+    conversation_log = ""
     
     while True:
         print("\nAI:", question)
+        conversation_log += f"\nAI: {question}\n"
+        
         user_input = input("You: ").strip()
+        conversation_log += f"You: {user_input}\n"
         
         if user_input.lower() in ['quit', 'exit', 'bye']:
             print("\nThank you for sharing with me! I've learned a lot about you.")
+            # Save final conversation before exiting
+            save_conversation("conversation_history.txt", knowledge_base, conversation_log)
             break
             
         try:
@@ -64,14 +83,19 @@ def main():
             # Store new facts
             knowledge_base.extend(response.extracted_facts)
             
-            # Show reasoning (optional - comment out to hide)
+            # Show and log reasoning
             print("\nThinking:", response.reasoning)
+            conversation_log += f"Thinking: {response.reasoning}\n"
             
             # Update question for next iteration
             question = response.follow_up_question
             
+            # Save conversation after each exchange
+            save_conversation("conversation_history.txt", knowledge_base, conversation_log)
+            
         except Exception as e:
             print(f"\nOops, I had trouble processing that: {e}")
+            conversation_log += f"Error: {str(e)}\n"
             question = "Could you rephrase that?"
 
 if __name__ == "__main__":
