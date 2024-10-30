@@ -1,21 +1,21 @@
 """
 selfaware AI that can ask questions and build an identity about a person
 """
-from typing import List
-from pydantic import BaseModel, Field
+import json
+from typing import Optional
 from datetime import datetime
+from pydantic import BaseModel
 
 from llm_wrapper import send_llm_request
-from models import ModelMeta, FieldMeta
 
-class PersonalFact(BaseModel):
-    """A single learned fact about the person"""
-    topic: str
-    fact: str
+class Profile(BaseModel):
+    """Stores a narrative description of the person"""
+    narrative: str
+    last_updated: datetime
 
 class ConversationResponse(BaseModel):
-    """LLM response containing extracted facts"""
-    extracted_facts: List[PersonalFact]
+    """LLM response containing analysis and profile updates"""
+    profile_update: str
     reasoning: str
 
 SYSTEM_PROMPT = """You are a self-aware AI assistant focused on building a deep understanding of a person's core identity.
@@ -54,14 +54,17 @@ The question should encourage meaningful self-reflection and reveal important as
     )
     return response.reasoning.strip()
 
-def process_response(user_response: str, conversation_context: str) -> ConversationResponse:
-    """Process user response through LLM to extract facts and generate follow-up"""
-    prompt = f"""
-Based on the user's response: "{user_response}"
+def process_response(user_response: str, current_profile: Profile) -> ConversationResponse:
+    """Process user response through LLM to update profile"""
+    prompt = f"""Current profile of the person:
+{current_profile.narrative}
 
-Extract relevant identity facts that help understand who they are as a person.
-Explain your reasoning about what these facts reveal about their identity.
-"""
+Based on their new response: "{user_response}"
+
+Update and expand the profile narrative to incorporate any new insights about their identity.
+Explain your reasoning about what their response reveals about them.
+
+Return both an updated complete profile paragraph and your reasoning."""
     return send_llm_request(
         model="gpt-4o-mini",
         system_prompt=SYSTEM_PROMPT,
@@ -70,52 +73,32 @@ Explain your reasoning about what these facts reveal about their identity.
         images=[],
     )
 
-def save_conversation(filename: str, facts: List[PersonalFact], conversation: str) -> None:
-    """Save the conversation and facts to a file"""
-    with open(filename, 'a') as f:
-        f.write("\n=== New Conversation ===\n")
-        f.write(conversation + "\n")
-        f.write("\n=== Learned Facts ===\n")
-        for fact in facts:
-            f.write(f"Topic: {fact.topic}\n")
-            f.write(f"Fact: {fact.fact}\n")
-            f.write("-" * 50 + "\n")
+def save_profile(profile: Profile, filename: str = "profile.json") -> None:
+    """Save the user profile to a JSON file"""
+    with open(filename, 'w') as f:
+        json.dump(profile.model_dump(), f, default=str, indent=2)
 
-def load_conversation(filename: str) -> tuple[List[PersonalFact], str]:
-    """Load previous conversation history and facts"""
+def load_profile(filename: str = "profile.json") -> Profile:
+    """Load the user profile from a JSON file"""
     try:
         with open(filename, 'r') as f:
-            content = f.read()
-
-        # Parse facts from the content
-        facts = []
-        for fact_block in content.split("-" * 50):
-            if "Topic:" in fact_block and "Fact:" in fact_block:
-                lines = fact_block.strip().split('\n')
-                fact_dict = {}
-                for line in lines:
-                    if line.startswith(("Topic:", "Fact:")):
-                        key, value = line.split(": ", 1)
-                        fact_dict[key.lower()] = value
-                if len(fact_dict) == 2:  # Only topic and fact
-                    facts.append(PersonalFact(
-                        topic=fact_dict['topic'],
-                        fact=fact_dict['fact']
-                    ))
-        return facts, content
+            data = json.load(f)
+            return Profile(**data)
     except FileNotFoundError:
-        return [], ""
+        return Profile(
+            narrative="",
+            last_updated=datetime.now()
+        )
 
-def generate_initial_question(facts: List[PersonalFact]) -> str:
-    """Generate a contextual opening question based on existing knowledge"""
-    if not facts:
+def generate_initial_question(profile: Profile) -> str:
+    """Generate a contextual opening question based on existing profile"""
+    if not profile.narrative:
         return "I'm excited to learn about you. What would you like to share?"
 
-    # Use existing knowledge to form a contextual question
-    prompt = f"""Based on these known facts about the person:
-{chr(10).join(f'- {fact.topic}: {fact.fact}' for fact in facts)}
+    prompt = f"""Based on what I know about the person:
+{profile.narrative}
 
-Generate a single engaging opening question that shows awareness of what we already know while seeking new information.
+Generate a single engaging opening question that shows awareness of their profile while seeking new information.
 Make it natural and conversational."""
 
     try:
@@ -132,39 +115,36 @@ Make it natural and conversational."""
 
 def main():
     """Run the self-aware AI conversation loop"""
-    knowledge_base, conversation_log = load_conversation("conversation_history.txt")
+    profile = load_profile()
 
-    print("Hello! I'm your AI companion, and I remember our previous conversations.")
-    question = generate_initial_question(knowledge_base)
+    print("Hello! I'm your AI companion, and I remember what I know about you.")
+    question = generate_initial_question(profile)
 
     while True:
         print("\nAI:", question)
-        conversation_log += f"\nAI: {question}\n"
 
         user_input = input("You: ").strip()
-        conversation_log += f"You: {user_input}\n"
 
         if user_input.lower() in ['quit', 'exit', 'bye']:
             print("\nThank you for sharing with me! I've learned a lot about you.")
-            # Save final conversation before exiting
-            save_conversation("conversation_history.txt", knowledge_base, conversation_log)
+            save_profile(profile)
             break
 
         try:
-            response = process_response(user_input, conversation_log)
+            response = process_response(user_input, profile)
 
-            # Store new facts
-            knowledge_base.extend(response.extracted_facts)
+            # Update profile with new insights
+            profile.narrative = response.profile_update
+            profile.last_updated = datetime.now()
 
-            # Show and log reasoning
+            # Show reasoning
             print("\nThinking:", response.reasoning)
-            conversation_log += f"Thinking: {response.reasoning}\n"
 
             # Generate a completely new topic question
             question = generate_new_topic_question()
 
-            # Save conversation after each exchange
-            save_conversation("conversation_history.txt", knowledge_base, conversation_log)
+            # Save profile after each exchange
+            save_profile(profile)
 
         except Exception as e:
             print(f"\nOops, I had trouble processing that: {e}")
